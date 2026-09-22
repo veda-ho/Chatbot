@@ -1,43 +1,185 @@
-const sendButton = document.getElementById("send-button");
-const userInput = document.getElementById("user-input");
-const chatBox = document.getElementById("chat-box");
+const sendButton =
+    document.getElementById("send-button");
+
+const userInput =
+    document.getElementById("user-input");
+
+const chatBox =
+    document.getElementById("chat-box");
 
 
-function sendMessage() {
+// ========================================
+// SEND MESSAGE
+// ========================================
 
-    const message = userInput.value.trim();
+async function sendMessage() {
 
-    // Don't send an empty message
+    const message =
+        userInput.value.trim();
+
+
     if (message === "") {
         return;
     }
 
-    // Create a new message bubble
-    const messageElement = document.createElement("div");
 
-    messageElement.classList.add("message", "user-message");
-    messageElement.textContent = message;
+    // ------------------------------------
+    // Display user's message
+    // ------------------------------------
 
-    // Add it to the chat
-    chatBox.appendChild(messageElement);
+    const userMessage =
+        document.createElement("div");
 
-    // Clear the textbox
+    userMessage.classList.add(
+        "message",
+        "user-message"
+    );
+
+    userMessage.textContent = message;
+
+    chatBox.appendChild(userMessage);
+
+
+    // Clear input box
     userInput.value = "";
 
-    // Scroll to newest message
-    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Scroll down
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+
+
+    // ------------------------------------
+    // Show temporary loading message
+    // ------------------------------------
+
+    const loadingMessage =
+        document.createElement("div");
+
+    loadingMessage.classList.add(
+        "message",
+        "bot-message"
+    );
+
+    loadingMessage.textContent =
+        "Thinking...";
+
+    chatBox.appendChild(
+        loadingMessage
+    );
+
+
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+
+
+    // ------------------------------------
+    // Send message to Flask
+    // ------------------------------------
+
+    try {
+
+        const response = await fetch(
+            "/chat",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    message: message
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        // Remove "Thinking..."
+        loadingMessage.remove();
+
+
+        // Display chatbot reply
+        addBotMessage(
+            data.reply
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Chat error:",
+            error
+        );
+
+
+        loadingMessage.remove();
+
+
+        addBotMessage(
+            "Sorry, something went wrong."
+        );
+
+    }
 }
 
 
-// Send when button is clicked
-sendButton.addEventListener("click", sendMessage);
+// ========================================
+// ADD BOT MESSAGE
+// ========================================
+
+function addBotMessage(text) {
+
+    const botMessage =
+        document.createElement("div");
+
+    botMessage.classList.add(
+        "message",
+        "bot-message"
+    );
+
+    botMessage.textContent =
+        text;
+
+    chatBox.appendChild(
+        botMessage
+    );
 
 
-// Also send when Enter is pressed
-userInput.addEventListener("keypress", function(event) {
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+}
 
-    if (event.key === "Enter") {
-        sendMessage();
+
+// ========================================
+// SEND BUTTON
+// ========================================
+
+sendButton.addEventListener(
+    "click",
+    sendMessage
+);
+
+
+// ========================================
+// ENTER KEY
+// ========================================
+
+userInput.addEventListener(
+    "keypress",
+    function(event) {
+
+        if (event.key === "Enter") {
+
+            sendMessage();
+
+        }
+
     }
-
-});
+);

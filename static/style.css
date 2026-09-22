@@ -1,11 +1,17 @@
+/* ========================================
+   GENERAL PAGE SETTINGS
+   ======================================== */
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
+
 body {
     font-family: Arial, sans-serif;
+
     background: #f4f7fb;
 
     display: flex;
@@ -15,15 +21,22 @@ body {
     min-height: 100vh;
 }
 
-/* Main chatbot window */
+
+/* ========================================
+   MAIN CHATBOT WINDOW
+   ======================================== */
+
 .chat-container {
     width: 420px;
     height: 650px;
 
     background: white;
+
     border-radius: 18px;
 
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    box-shadow:
+        0 8px 30px
+        rgba(0, 0, 0, 0.12);
 
     display: flex;
     flex-direction: column;
@@ -31,7 +44,11 @@ body {
     overflow: hidden;
 }
 
-/* Top section */
+
+/* ========================================
+   HEADER
+   ======================================== */
+
 .chat-header {
     padding: 22px;
 
@@ -39,48 +56,76 @@ body {
     color: white;
 }
 
+
 .chat-header h1 {
     font-size: 21px;
+
     margin-bottom: 5px;
 }
 
+
 .chat-header p {
     font-size: 14px;
+
     opacity: 0.85;
 }
 
-/* Where messages appear */
+
+/* ========================================
+   CHAT AREA
+   ======================================== */
+
 .chat-box {
     flex: 1;
+
     padding: 20px;
 
     overflow-y: auto;
 
     display: flex;
     flex-direction: column;
-    gap: 12px;
+
+    gap: 14px;
 }
 
-/* All messages */
-.message {
-    max-width: 80%;
 
-    padding: 11px 14px;
-    border-radius: 14px;
+/* ========================================
+   MESSAGE BUBBLES
+   ======================================== */
+
+.message {
+    max-width: 88%;
+
+    padding: 12px 15px;
+
+    border-radius: 15px;
 
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.55;
+
+    word-wrap: break-word;
 }
 
-/* Messages from chatbot */
+
+/* ========================================
+   BOT MESSAGE
+   ======================================== */
+
 .bot-message {
     background: #eef2f7;
     color: #222;
 
     align-self: flex-start;
+
+    /* Keep line breaks from Python */
+    white-space: pre-line;
 }
 
-/* Messages from user */
+
+/* ========================================
+   USER MESSAGE
+   ======================================== */
+
 .user-message {
     background: #1f4e8c;
     color: white;
@@ -88,22 +133,37 @@ body {
     align-self: flex-end;
 }
 
-/* Bottom input area */
+
+/* ========================================
+   INPUT AREA
+   ======================================== */
+
 .input-area {
     display: flex;
+    align-items: center;
 
     padding: 15px;
 
     border-top: 1px solid #ddd;
+
     background: white;
 }
+
+
+/* ========================================
+   TEXT INPUT
+   ======================================== */
 
 .input-area input {
     flex: 1;
 
+    min-width: 0;
+
     padding: 11px 14px;
 
-    border: 1px solid #ccc;
+    border:
+        1px solid #ccc;
+
     border-radius: 20px;
 
     outline: none;
@@ -111,37 +171,33 @@ body {
     font-size: 14px;
 }
 
+
 .input-area input:focus {
     border-color: #1f4e8c;
 }
 
-.input-area button {
-    margin-left: 10px;
 
-    padding: 10px 18px;
+/* ========================================
+   MICROPHONE BUTTON
+   ======================================== */
 
-    border: none;
-    border-radius: 20px;
-
-    background: #1f4e8c;
-    color: white;
-
-    cursor: pointer;
-}
-
-.input-area button:hover {
-    background: #163a69;
-/* Microphone button */
 #mic-button {
     margin-left: 8px;
 
     width: 42px;
     height: 42px;
 
+    flex-shrink: 0;
+
+    padding: 0;
+
     border: none;
+
     border-radius: 50%;
 
     background: #eef2f7;
+
+    color: #222;
 
     font-size: 18px;
 
@@ -152,7 +208,33 @@ body {
     justify-content: center;
 }
 
+
 #mic-button:hover {
     background: #dfe6ef;
 }
+
+
+/* ========================================
+   SEND BUTTON
+   ======================================== */
+
+#send-button {
+    margin-left: 8px;
+
+    padding: 10px 18px;
+
+    border: none;
+
+    border-radius: 20px;
+
+    background: #1f4e8c;
+
+    color: white;
+
+    cursor: pointer;
+}
+
+
+#send-button:hover {
+    background: #163a69;
 }
