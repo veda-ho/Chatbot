@@ -131,4 +131,28 @@ body {
 
 .input-area button:hover {
     background: #163a69;
+/* Microphone button */
+#mic-button {
+    margin-left: 8px;
+
+    width: 42px;
+    height: 42px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #eef2f7;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#mic-button:hover {
+    background: #dfe6ef;
+}
 }

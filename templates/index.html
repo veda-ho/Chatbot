@@ -7,40 +7,68 @@
 
     <title>Exchange Flight Assistant</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 </head>
 
 <body>
 
+    <!-- Main chatbot container -->
     <div class="chat-container">
 
+        <!-- Header -->
         <div class="chat-header">
             <h1>✈️ Exchange Flight Assistant</h1>
             <p>Plan smarter for your exchange</p>
         </div>
 
+
+        <!-- Chat messages -->
         <div class="chat-box" id="chat-box">
 
             <div class="message bot-message">
                 Hi! 👋 I'm your Exchange Flight Assistant.
-                Ask me about flight prices, travel dates, weather or flight information.
+                Ask me about flight prices, travel dates,
+                weather or flight information.
             </div>
 
         </div>
 
+
+        <!-- Message input -->
         <div class="input-area">
+
             <input
                 type="text"
                 id="user-input"
-                placeholder="Ask me something..."
+                placeholder="Ask about flights, prices or weather..."
             >
 
-            <button id="send-button">Send</button>
+            <!-- Voice input -->
+            <button
+                id="mic-button"
+                type="button"
+                title="Voice input"
+            >
+                🎤
+            </button>
+
+            <!-- Send message -->
+            <button
+                id="send-button"
+                type="button"
+            >
+                Send
+            </button>
+
         </div>
 
     </div>
 
+
+    <!-- JavaScript -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
