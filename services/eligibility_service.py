@@ -67,7 +67,9 @@ def answer_eligibility(result, user_type="student"):
     if place is None:
         return unknown_place_reply()
     if user_type == "staff":
-        return "Exchange eligibility applies to students. Switch to Student if you're asking for a student."
+        return ("🏛️ You're signed in as Staff / Faculty, but exchange eligibility is for students.\n\n"
+                "If you're a student, press 🏠 Home and choose Student. "
+                "If you're asking for a student, they can check it themselves the same way.")
 
     cgpa = _cgpa(result)
     college = to_college(result.get("school"))
