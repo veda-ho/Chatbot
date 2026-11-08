@@ -1,0 +1,15 @@
+city,country,route,hotel_cap_sgd_per_night,daily_allowance_sgd,policy_ids,note,data_source
+Helsinki,Finland,SIN-HEL,260,120,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Espoo,Finland,SIN-HEL,230,110,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Tampere,Finland,SIN-HEL,210,100,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Mikkeli,Finland,SIN-HEL,180,95,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Budapest,Hungary,SIN-BUD,190,90,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Luxembourg City,Luxembourg,SIN-LUX,290,135,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Esch-sur-Alzette,Luxembourg,SIN-LUX,240,125,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Zagreb,Croatia,SIN-ZAG,180,85,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Hanoi,Vietnam,SIN-HAN,170,75,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Ho Chi Minh City,Vietnam,SIN-SGN,170,75,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Bandar Seri Begawan,Brunei,SIN-BWN,180,80,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Yogyakarta,Indonesia,SIN-YIA,140,65,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Jakarta,Indonesia,SIN-CGK,170,75,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
+Bandung,Indonesia,SIN-CGK,140,65,POL013; POL014,Mock NTU staff claim limits for the prototype,SYNTHETIC
