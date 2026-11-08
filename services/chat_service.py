@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import date
 
 from dotenv import load_dotenv
 from google import genai
@@ -30,78 +31,81 @@ def understand_message(message):
         # -------------------------------------------------
 
         prompt = f"""
-You are the intent classifier for a student exchange chatbot.
+You are the intent classifier for an NTU (Singapore) travel and exchange chatbot.
 
-The chatbot helps university students planning for exchange.
+The chatbot helps NTU students planning exchange and NTU staff planning work trips.
+Our destinations: Finland, Hungary, Luxembourg, Croatia, Vietnam, Brunei and Indonesia.
+
+Today's date is {date.today().isoformat()}.
 
 You MUST choose exactly ONE of these intents:
 
 1. current_weather
    - User wants the weather right now.
-   - Example:
-     "What's the weather in Tokyo?"
-     "Is it raining in Seoul?"
+   - Example: "What's the weather in Helsinki?"
 
 2. historical_weather
-   - User wants typical, historical, seasonal or monthly weather.
-   - Example:
-     "What's Seoul usually like in December?"
-     "How cold is Tokyo in January?"
-     "Singapore weather in June"
+   - User wants typical, seasonal or monthly weather.
+   - Example: "How cold is Helsinki in January?"
 
 3. senior_experience
    - User asks about previous exchange students' experiences,
-     advice, opinions, challenges or recommendations.
+     advice, opinions, safety, challenges or tips.
 
 4. senior_attractions
    - User asks what attractions, places or activities previous
      exchange students recommend.
 
 5. senior_accommodation
-   - User asks about accommodation used or recommended by
-     previous exchange students.
+   - User asks where to stay, or about accommodation used or
+     recommended by previous exchange students.
 
 6. senior_cost
-   - User asks about spending, living costs, budgets or expenses
-     reported by previous exchange students.
+   - User asks about spending, living costs, budgets or expenses.
 
 7. flight_price
-   - User asks about flight prices or typical flight costs.
+   - User asks about flight prices, which flight to book,
+     or when to book a flight.
 
 8. cheapest_flight_day
-   - User asks which day or day of the week is historically
-     cheapest to fly.
+   - User asks which day of the week is cheapest to fly.
 
 9. cheapest_flight_month
-   - User asks which month or period is historically cheapest
-     to fly.
+   - User asks which month or period is cheapest to fly.
 
 10. country_comparison
     - User asks to compare two or more exchange destinations.
 
-11. unknown
+11. eligibility
+    - User asks whether they can go on exchange somewhere,
+      or about cGPA requirements or exchange vacancies.
+
+12. modules
+    - User asks which modules or courses they can take or map
+      at a partner university.
+
+13. unknown
     - The request does not match any of the above.
 
 
 Extract information when available:
 
-- city
-- country
-- countries
-- month
-- origin
-- destination
+- city: a city named for a non-flight purpose
+- country: one country
+- countries: a JSON list, only when comparing two or more places
+- university: a university name, e.g. "Aalto", "VinUni", "ELTE"
+- month: a number from 1 to 12
+- departure_date: the flight date as YYYY-MM-DD, using the next
+  future occurrence if the user gives no year
+- origin and destination: for flights
+- airline: if the user names one
+- cgpa: a number, e.g. 3.6
+- school: the user's NTU school, e.g. "NBS", "CCDS", "EEE"
+- semester: 1 or 2, if the user names a semester
 
-Use "country" when the user is referring to one country.
-
-Use "countries" when the user is comparing two or more countries.
-"countries" must be a JSON list.
-
-For flight-related intents, locations should primarily be placed in
-"origin" and "destination", not "city".
-
-Do not put the flight destination into "city" unless the question
-separately refers to that city for a non-flight purpose.
+For flight-related intents, put the place the user flies to in
+"destination", not "city". If the user names a university,
+also put it in "university".
 
 IMPORTANT RULES:
 
@@ -111,7 +115,6 @@ IMPORTANT RULES:
 - Do not explain your answer.
 - Do not invent missing information.
 - Missing values must be null.
-- Month must be a number from 1 to 12.
 - Use the intent names exactly as provided above.
 
 
@@ -121,9 +124,16 @@ Return exactly this structure:
     "intent": "intent_name",
     "city": null,
     "country": null,
+    "countries": null,
+    "university": null,
     "month": null,
+    "departure_date": null,
     "origin": null,
-    "destination": null
+    "destination": null,
+    "airline": null,
+    "cgpa": null,
+    "school": null,
+    "semester": null
 }}
 
 
@@ -146,6 +156,20 @@ USER MESSAGE:
         response_text = (
             interaction.output_text.strip()
         )
+
+
+        # -------------------------------------------------
+        # Remove ```json fences if Gemini adds them anyway
+        # -------------------------------------------------
+
+        if response_text.startswith("```"):
+
+            response_text = (
+                response_text
+                .strip("`")
+                .removeprefix("json")
+                .strip()
+            )
 
 
         # -------------------------------------------------
@@ -172,6 +196,8 @@ USER MESSAGE:
             "cheapest_flight_day",
             "cheapest_flight_month",
             "country_comparison",
+            "eligibility",
+            "modules",
             "unknown"
         ]
 
@@ -243,23 +269,27 @@ if __name__ == "__main__":
 
     tests = [
 
-        "What's the weather in Tokyo?",
+        "What's the weather in Helsinki?",
 
-        "What's Seoul usually like in December?",
+        "How cold is Helsinki usually in January?",
 
-        "I'm going to Tokyo in Jan. How cold is it usually?",
+        "I'm going to Aalto in January. When should I book my flight?",
 
-        "What attractions do seniors recommend in Korea?",
+        "What attractions do seniors recommend in Hanoi?",
 
-        "How much did students spend during exchange in Japan?",
+        "How much did students spend during exchange in Finland?",
 
-        "Where did seniors stay in Seoul?",
+        "Where did seniors stay near VinUni?",
 
-        "Which day is cheapest to fly from Singapore to Seoul?",
+        "Which day is cheapest to fly from Singapore to Hanoi?",
 
-        "Which month is cheapest to fly to Tokyo?",
+        "Which month is cheapest to fly to Budapest?",
 
-        "Should I go to Japan or Korea for exchange?"
+        "Should I go to Hungary or Luxembourg for exchange?",
+
+        "I'm in NBS with a 3.4 cGPA. Can I go to Aalto?",
+
+        "Which modules can I clear at Tampere as a CCDS student?"
     ]
 
 
