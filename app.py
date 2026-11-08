@@ -94,6 +94,14 @@ def remember(result, context):
                 merged[key] = context[key]
 
 
+    # Tidy the semester: "Semester 2", "sem 2", "2" or 2 all become 2
+    if merged.get("semester") is not None:
+
+        digits = [c for c in str(merged["semester"]) if c in "12"]
+
+        merged["semester"] = int(digits[0]) if digits else None
+
+
     # Tidy the month so the weather code always gets a number
     try:
 
@@ -123,6 +131,38 @@ def remember(result, context):
     return merged, new_context
 
 
+def gemini_problem(error):
+    """A clear message when Gemini (the AI that reads questions) fails."""
+
+    text = str(error).lower()
+
+    if error == "timeout":
+
+        return (
+            "⏳ The AI service (Gemini) is slow right now and didn't reply in time. "
+            "Please wait a few seconds and send your question again."
+        )
+
+    if "429" in text or "quota" in text or "resource_exhausted" in text or "rate" in text:
+
+        return (
+            "⏳ We've hit Gemini's free usage limit for the moment. "
+            "Please wait about a minute and try again."
+        )
+
+    if "api key" in text or "api_key" in text or "401" in text or "403" in text or "permission" in text:
+
+        return (
+            "🔑 The Gemini API key isn't working. "
+            "Check GEMINI_API_KEY is set, then restart the app."
+        )
+
+    return (
+        "⚠️ I couldn't reach the AI service (Gemini) just now. "
+        "Please try again in a moment."
+    )
+
+
 def weather_city(result):
     """The city to look up weather for, even if the user named a university."""
 
@@ -146,6 +186,62 @@ def weather_city(result):
         result.get("destination")
         or result.get("country")
     )
+
+
+def place_note(result, city):
+    """'📍 Aalto University is in Espoo, Finland.' when the city isn't obvious."""
+
+    place = resolve(
+        result.get("university"),
+        result.get("destination"),
+        result.get("country")
+    )
+
+    if (
+        place
+        and place["uni"] is not None
+        and not result.get("city")
+        and place["uni"]["name"].lower() != str(city).lower()
+    ):
+
+        return f"📍 {place['uni']['name']} is in {city}, {place['country']}.\n\n"
+
+    return ""
+
+
+def weather_month(result):
+    """The month to show typical weather for: asked, flying, or term start."""
+
+    if result.get("month"):
+
+        return result["month"]
+
+
+    if result.get("departure_date"):
+
+        try:
+            return int(str(result["departure_date"])[5:7])
+        except ValueError:
+            pass
+
+
+    place = resolve(
+        result.get("university"),
+        result.get("destination"),
+        result.get("country")
+    )
+
+    semester = str(result.get("semester") or "")
+
+    if place and place["uni"] is not None and semester in ("1", "2"):
+
+        start = place["uni"]["sem1_start"] if semester == "1" else place["uni"]["sem2_start"]
+
+        if start:
+            return int(start[:2])
+
+
+    return None
 
 
 # =========================================================
@@ -237,6 +333,15 @@ def chat():
 
 
     old_context = data.get("context") or {}
+
+
+    # Gemini didn't answer: say why instead of guessing
+    if result.get("error"):
+
+        return jsonify({
+            "reply": gemini_problem(result["error"]),
+            "context": old_context
+        })
 
     # Did this message give a new detail (date, cGPA, school, place...)?
     gave_detail = any(
@@ -365,6 +470,8 @@ def answer(result, user_type):
 
 
         return (
+            place_note(result, city) +
+
             f"🌤️ Current Weather in "
             f"{weather['city']}, "
             f"{weather['country']}\n\n"
@@ -391,7 +498,7 @@ def answer(result, user_type):
 
         city = weather_city(result)
 
-        month = result.get("month")
+        month = weather_month(result)
 
 
         if not city:
@@ -401,11 +508,14 @@ def answer(result, user_type):
 
         if not month:
 
-            return f"Which month do you want typical weather for in {city}?"
+            return (
+                place_note(result, city) +
+                f"Which month are you going? I'll show the typical weather in {city} for that month."
+            )
 
 
         month_name = (
-            result["month_name"]
+            MONTH_NAMES[int(month)]
         )
 
 
@@ -426,6 +536,8 @@ def answer(result, user_type):
 
 
         return (
+            place_note(result, city) +
+
             f"📊 Typical Weather in "
             f"{historical['city']} — "
             f"{month_name}\n\n"
@@ -483,14 +595,29 @@ def answer(result, user_type):
                 else place["city"] or place["country"]
             )
 
-            when = (
-                f" in {result['month_name']}"
-                if result.get("month_name") else ""
-            )
+            details = [name]
+
+            if result.get("semester"):
+                details.append(f"Semester {result['semester']}")
+            elif result.get("month_name"):
+                details.append(result["month_name"])
+
+            if result.get("school"):
+                details.append(str(result["school"]).upper())
+
+
+            # only ask for what we don't know yet
+            if result.get("school") and result.get("cgpa"):
+                eligible_hint = "• Am I eligible?\n"
+            elif result.get("school"):
+                eligible_hint = "• Am I eligible? (tell me your cGPA)\n"
+            else:
+                eligible_hint = "• Am I eligible? (tell me your school and cGPA)\n"
+
 
             return (
-                f"Got it: {name}{when}. 👍 I can help with:\n\n"
-                "• Am I eligible? (tell me your school and cGPA)\n"
+                f"Got it: {', '.join(details)}. 👍 I can help with:\n\n" +
+                eligible_hint +
                 "• Which modules can I take?\n"
                 "• When should I book my flight?\n"
                 "• Where did seniors stay? Is it safe?\n"
