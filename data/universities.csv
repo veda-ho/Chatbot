@@ -1,0 +1,13 @@
+uni_id,name,aliases,match_key,country,city,route,sem1_start,sem2_start,ntu_spots_sem1,ntu_spots_sem2,note
+AALTO,Aalto University,aalto;aalto university;aalto uni,aalto,Finland,Espoo,SIN-HEL,09-01,01-07,17,21,Term start dates are approximate; check each university's academic calendar
+HELSINKI,University of Helsinki,university of helsinki;uni of helsinki;helsinki uni;helsinki university;uh,helsinki,Finland,Helsinki,SIN-HEL,09-01,01-13,4,4,Term start dates are approximate; check each university's academic calendar
+TAMPERE,Tampere University,tampere;tampere university;tampere uni;tuni,tampere,Finland,Tampere,SIN-HEL,08-25,01-07,6,10,Term start dates are approximate; check each university's academic calendar
+ELTE,Eotvos Lorand University,elte;eotvos;eotvos lorand;eotvos lorand university,eotvos,Hungary,Budapest,SIN-BUD,09-08,02-09,2,2,Term start dates are approximate; check each university's academic calendar
+UNILU,University of Luxembourg,university of luxembourg;uni of luxembourg;uni luxembourg;unilu,luxembourg,Luxembourg,Esch-sur-Alzette,SIN-LUX,09-15,02-02,4,2,Term start dates are approximate; check each university's academic calendar
+ZSEM,Zagreb School of Economics and Management,zsem;zagreb school;zagreb school of economics,zagreb,Croatia,Zagreb,SIN-ZAG,10-01,,2,0,Term start dates are approximate; check each university's academic calendar
+VINUNI,VinUniversity,vinuni;vin uni;vinuniversity;vin university,vinuniversity,Vietnam,Hanoi,SIN-HAN,08-25,01-12,2,2,Term start dates are approximate; check each university's academic calendar
+RMITVN,RMIT University Vietnam,rmit vietnam;rmit;rmit saigon;rmit ho chi minh,rmit,Vietnam,Ho Chi Minh City,SIN-SGN,07-21,02-23,1,1,Term start dates are approximate; check each university's academic calendar
+UBD,Universiti Brunei Darussalam,ubd;universiti brunei darussalam;university of brunei;universiti brunei,brunei,Brunei,Bandar Seri Begawan,SIN-BWN,08-04,01-12,4,4,Term start dates are approximate; check each university's academic calendar
+UGM,Universitas Gadjah Mada,ugm;gadjah mada;gajah mada;universitas gadjah mada;university of gadjah mada,gadjah,Indonesia,Yogyakarta,SIN-YIA,08-25,02-09,2,2,Term start dates are approximate; check each university's academic calendar
+UI,University of Indonesia,university of indonesia;universitas indonesia;uni of indonesia,universityofindonesia,Indonesia,Depok,SIN-CGK,08-25,02-09,2,2,Term start dates are approximate; check each university's academic calendar
+ITB,Institut Teknologi Bandung,itb;institut teknologi bandung;bandung institute of technology,bandung,Indonesia,Bandung,SIN-CGK,08-18,01-26,2,2,Term start dates are approximate; check each university's academic calendar

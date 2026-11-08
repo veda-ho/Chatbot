@@ -1,0 +1,60 @@
+country,university_name,student_type,min_cgpa
+Indonesia,Institut Teknologi Bandung,cohass,3.3
+Indonesia,Institut Teknologi Bandung,coe,3.3
+Indonesia,Institut Teknologi Bandung,cos,3.3
+Indonesia,Institut Teknologi Bandung,ccds,3.3
+Indonesia,Institut Teknologi Bandung,nbs,3.3
+Indonesia,University of Gadjah Mada,cohass,3.3
+Indonesia,University of Gadjah Mada,coe,3.3
+Indonesia,University of Gadjah Mada,cos,3.3
+Indonesia,University of Gadjah Mada,ccds,3.3
+Indonesia,University of Gadjah Mada,nbs,3.3
+Indonesia,University of Indonesia,cohass,3.5
+Indonesia,University of Indonesia,coe,3.5
+Indonesia,University of Indonesia,nbs,3.5
+Vietnam,Royal Melbourne Institute of Technology (RMIT) – Ho Chi Minh City,cohass,3.3
+Vietnam,Royal Melbourne Institute of Technology (RMIT) – Ho Chi Minh City,coe,3.3
+Vietnam,Royal Melbourne Institute of Technology (RMIT) – Ho Chi Minh City,cos,3.3
+Vietnam,Royal Melbourne Institute of Technology (RMIT) – Ho Chi Minh City,ccds,3.3
+Vietnam,Royal Melbourne Institute of Technology (RMIT) – Ho Chi Minh City,nbs,3.3
+Vietnam,Vin University,cohass,3.3
+Vietnam,Vin University,coe,3.3
+Vietnam,Vin University,cos,3.3
+Vietnam,Vin University,ccds,3.3
+Vietnam,Vin University,nbs,3.3
+Brunei,Universiti Brunei Darussalam,cohass,3.5
+Brunei,Universiti Brunei Darussalam,coe,3.5
+Brunei,Universiti Brunei Darussalam,cos,3.5
+Brunei,Universiti Brunei Darussalam,ccds,3.5
+Brunei,Universiti Brunei Darussalam,nbs,3.5
+Croatia,Zagreb School of Economics and Management,cohass,3.3
+Croatia,Zagreb School of Economics and Management,coe,3.3
+Croatia,Zagreb School of Economics and Management,cos,3.3
+Croatia,Zagreb School of Economics and Management,ccds,3.3
+Croatia,Zagreb School of Economics and Management,nbs,3.3
+Hungary,Eötvös Loránd University,cohass,3.3
+Hungary,Eötvös Loránd University,coe,3.3
+Hungary,Eötvös Loránd University,cos,3.3
+Hungary,Eötvös Loránd University,ccds,3.3
+Hungary,Eötvös Loránd University,nbs,3.3
+Luxembourg,University of Luxembourg,cohass,3.5
+Luxembourg,University of Luxembourg,coe,3.5
+Luxembourg,University of Luxembourg,cos,3.5
+Luxembourg,University of Luxembourg,ccds,3.5
+Luxembourg,University of Luxembourg,nbs,3.5
+Finland,Aalto University,cohass,3.3
+Finland,Aalto University,coe,3.3
+Finland,Aalto University,cos,3.3
+Finland,Aalto University,ccds,3.3
+Finland,Tampere University,cohass,3.3
+Finland,Tampere University,coe,3.3
+Finland,Tampere University,cos,3.3
+Finland,Tampere University,ccds,3.3
+Finland,Tampere University,nbs,3.3
+Finland,University of Helsinki,cohass,3.3
+Finland,University of Helsinki,coe,3.3
+Finland,University of Helsinki,cos,3.3
+Finland,University of Helsinki,ccds,3.3
+Finland,University of Helsinki,nbs,3.3
+Finland,Aalto University - School of Business (Otaniemi Campus),nbs,3.5
+Finland,Aalto University - School of Business (Mikkeli Campus),nbs,3.3
