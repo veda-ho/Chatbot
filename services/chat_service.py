@@ -38,7 +38,7 @@ Our destinations: Finland, Hungary, Luxembourg, Croatia, Vietnam, Brunei and Ind
 
 Today's date is {date.today().isoformat()}.
 
-You MUST choose exactly ONE of these intents:
+Choose the intent (or intents) from this list:
 
 1. current_weather
    - User wants the weather right now.
@@ -88,6 +88,12 @@ You MUST choose exactly ONE of these intents:
     - The request does not match any of the above.
 
 
+If the message asks more than one thing (e.g. "Where should I stay
+and how much does it cost?"), put EVERY matching intent in "intents",
+in the order the user asked, up to 3. Put the first one in "intent".
+If it asks one thing, "intents" has just that one intent.
+
+
 Extract information when available:
 
 - city: a city named for a non-flight purpose
@@ -122,6 +128,7 @@ Return exactly this structure:
 
 {{
     "intent": "intent_name",
+    "intents": ["intent_name"],
     "city": null,
     "country": null,
     "countries": null,
@@ -202,11 +209,30 @@ USER MESSAGE:
         ]
 
 
-        if result.get("intent") not in valid_intents:
+        # Keep only valid intents, in order, without repeats (max 3)
+        intents = result.get("intents") or [result.get("intent")]
+
+        if isinstance(intents, str):
+            intents = [intents]
+
+        intents = [
+            i for n, i in enumerate(intents)
+            if i in valid_intents and i not in intents[:n]
+        ]
+
+        # "unknown" only counts if nothing else matched
+        if len(intents) > 1:
+            intents = [i for i in intents if i != "unknown"]
+
+        if not intents:
 
             return {
-                "intent": "unknown"
+                "intent": "unknown",
+                "intents": ["unknown"]
             }
+
+        result["intents"] = intents[:3]
+        result["intent"] = result["intents"][0]
 
 
         # -------------------------------------------------
@@ -286,6 +312,8 @@ if __name__ == "__main__":
         "Which month is cheapest to fly to Budapest?",
 
         "Should I go to Hungary or Luxembourg for exchange?",
+
+        "Where should I stay in Hanoi and how much does it cost?",
 
         "I'm in NBS with a 3.4 cGPA. Can I go to Aalto?",
 
