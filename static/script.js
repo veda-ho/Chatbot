@@ -7,16 +7,108 @@ const userInput =
 const chatBox =
     document.getElementById("chat-box");
 
-const userType =
-    document.getElementById("user-type");
-
 const micButton =
     document.getElementById("mic-button");
 
 
-// What the bot remembers from earlier messages
-// (university, city, date, school, cGPA...), sent back each time
-let context = {};
+// "student" or "staff", chosen on the home page
+const userRole =
+    document.body.dataset.role || "student";
+
+
+// ========================================
+// CHAT SESSION
+// Everything the bot remembers in this sitting:
+//   history: every message so far (sent to Gemini)
+//   context: details like university, date, school, cGPA
+// Saved in the browser tab, so a refresh keeps the chat.
+// Going back to the home page starts a new chat.
+// ========================================
+
+const STORAGE_KEY = "exchangebot-chat";
+
+let session = {
+    role: userRole,
+    history: [],
+    context: {}
+};
+
+
+function saveSession() {
+
+    try {
+        sessionStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(session)
+        );
+    }
+
+    catch (error) {
+        // storage blocked: the chat still works, it just won't survive a refresh
+    }
+}
+
+
+function loadSession() {
+
+    try {
+
+        const saved = JSON.parse(
+            sessionStorage.getItem(STORAGE_KEY)
+        );
+
+        // only reuse a saved chat for the same role
+        if (saved && saved.role === userRole) {
+            session = saved;
+        }
+    }
+
+    catch (error) {
+        // nothing saved, or storage blocked: start fresh
+    }
+}
+
+
+// ========================================
+// SHOW MESSAGES
+// ========================================
+
+function addMessage(text, who) {
+
+    const bubble =
+        document.createElement("div");
+
+    bubble.classList.add(
+        "message",
+        who === "user" ? "user-message" : "bot-message"
+    );
+
+    bubble.textContent = text;
+
+    chatBox.appendChild(bubble);
+
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+
+    return bubble;
+}
+
+
+function addBotMessage(text) {
+
+    return addMessage(text, "bot");
+}
+
+
+// Put back the earlier messages after a refresh
+function restoreChat() {
+
+    loadSession();
+
+    for (const turn of session.history) {
+        addMessage(turn.text, turn.role);
+    }
+}
 
 
 // ========================================
@@ -34,59 +126,16 @@ async function sendMessage() {
     }
 
 
-    // ------------------------------------
-    // Display user's message
-    // ------------------------------------
+    // Show the user's message and clear the box
+    addMessage(message, "user");
 
-    const userMessage =
-        document.createElement("div");
-
-    userMessage.classList.add(
-        "message",
-        "user-message"
-    );
-
-    userMessage.textContent = message;
-
-    chatBox.appendChild(userMessage);
-
-
-    // Clear input box
     userInput.value = "";
 
 
-    // Scroll down
-    chatBox.scrollTop =
-        chatBox.scrollHeight;
-
-
-    // ------------------------------------
-    // Show temporary loading message
-    // ------------------------------------
-
+    // Temporary loading message
     const loadingMessage =
-        document.createElement("div");
+        addBotMessage("Thinking...");
 
-    loadingMessage.classList.add(
-        "message",
-        "bot-message"
-    );
-
-    loadingMessage.textContent =
-        "Thinking...";
-
-    chatBox.appendChild(
-        loadingMessage
-    );
-
-
-    chatBox.scrollTop =
-        chatBox.scrollHeight;
-
-
-    // ------------------------------------
-    // Send message to Flask
-    // ------------------------------------
 
     try {
 
@@ -102,8 +151,9 @@ async function sendMessage() {
 
                 body: JSON.stringify({
                     message: message,
-                    user_type: userType.value,
-                    context: context
+                    user_type: userRole,
+                    context: session.context,
+                    history: session.history
                 })
             }
         );
@@ -113,20 +163,22 @@ async function sendMessage() {
             await response.json();
 
 
-        // Remember details for the next question
-        if (data.context) {
-            context = data.context;
-        }
-
-
-        // Remove "Thinking..."
         loadingMessage.remove();
 
+        addBotMessage(data.reply);
 
-        // Display chatbot reply
-        addBotMessage(
-            data.reply
+
+        // Remember this exchange for the rest of the sitting
+        session.history.push(
+            { role: "user", text: message },
+            { role: "bot", text: data.reply }
         );
+
+        if (data.context) {
+            session.context = data.context;
+        }
+
+        saveSession();
 
     }
 
@@ -137,9 +189,7 @@ async function sendMessage() {
             error
         );
 
-
         loadingMessage.remove();
-
 
         addBotMessage(
             "Sorry, something went wrong."
@@ -150,34 +200,7 @@ async function sendMessage() {
 
 
 // ========================================
-// ADD BOT MESSAGE
-// ========================================
-
-function addBotMessage(text) {
-
-    const botMessage =
-        document.createElement("div");
-
-    botMessage.classList.add(
-        "message",
-        "bot-message"
-    );
-
-    botMessage.textContent =
-        text;
-
-    chatBox.appendChild(
-        botMessage
-    );
-
-
-    chatBox.scrollTop =
-        chatBox.scrollHeight;
-}
-
-
-// ========================================
-// SEND BUTTON
+// SEND BUTTON AND ENTER KEY
 // ========================================
 
 sendButton.addEventListener(
@@ -185,10 +208,6 @@ sendButton.addEventListener(
     sendMessage
 );
 
-
-// ========================================
-// ENTER KEY
-// ========================================
 
 userInput.addEventListener(
     "keypress",
@@ -286,3 +305,10 @@ else {
     );
 
 }
+
+
+// ========================================
+// START: bring back this sitting's chat, if any
+// ========================================
+
+restoreChat();
