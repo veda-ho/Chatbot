@@ -114,6 +114,29 @@ def answer_eligibility(result, user_type="student"):
 # MODULE MAPPINGS
 # =========================================================
 
+SMALL_WORDS = {"and", "or", "of", "for", "in", "on", "to", "the", "a", "an", "with", "&"}
+
+
+def nice_name(name):
+    """'ACCOUNTING ANALYSIS &VALUATION' -> 'Accounting Analysis & Valuation'."""
+    words = str(name).replace("&", " & ").split()
+    out = []
+    for i, w in enumerate(words):
+        low = w.lower()
+        if i > 0 and low in SMALL_WORDS:
+            out.append(low)
+        elif len(w) == 2 and w.isupper():
+            out.append(w)            # keep short acronyms like SE, AI, IT
+        else:
+            out.append(low.capitalize())
+    return " ".join(out)
+
+
+def shorten(text, limit=48):
+    text = " ".join(str(text).split())
+    return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
+
+
 def answer_modules(result, user_type="student"):
     place, unis = _universities(result)
     if place is None:
@@ -141,15 +164,24 @@ def answer_modules(result, user_type="student"):
     # school-specific mappings first, newest first, one example per NTU module
     mods = mods.assign(general=mods["school"] == "all").sort_values(["general", "year"], ascending=[True, False])
     total = mods["ntu_course_code"].nunique()
-    examples = mods.drop_duplicates("ntu_course_code").head(8)
+    examples = mods.drop_duplicates("ntu_course_code").head(6)
 
-    who = f" for {COLLEGE_NAMES[college]}" if college else ""
-    lines = [f"📚 Approved module mappings at {uni['name']}{who}",
-             f"{total} NTU modules can be mapped. Some examples:", ""]
+    who = f"{COLLEGE_NAMES[college]} students" if college else "NTU students"
+    sem_text = f"Semester {semester} · " if semester in (1, 2, "1", "2") else ""
+    years = sorted(examples["year"].unique())
+    year_text = str(years[0]) if len(years) == 1 else f"{years[0]}–{years[-1]}"
+
+    lines = [f"📚 Modules {who} can map at {uni['name']}",
+             f"{sem_text}{total} NTU modules"
+             + (f" · {len(examples)} examples" if total > len(examples) else "")
+             + f" (approved {year_text})", ""]
     for m in examples.itertuples():
-        ntu = (f"{m.ntu_course_code} (broadening elective)" if m.ntu_course_code == m.ntu_course_name
-               else f"{m.ntu_course_code} {m.ntu_course_name}")
-        lines.append(f"• {ntu} ← {m.foreign_course_name} ({m.au:g} AU, approved {m.year} Sem {m.sem})")
+        if m.ntu_course_code == m.ntu_course_name:
+            ntu = f"{m.ntu_course_code} (broadening elective)"
+        else:
+            ntu = f"{m.ntu_course_code} {nice_name(m.ntu_course_name)}"
+        lines += [f"{ntu} · {m.au:g} AU", f"   ↳ {shorten(m.foreign_course_name)}", ""]
+    lines.pop()   # no blank line after the last module
     if not college:
         lines += ["", "Tell me your school (e.g. NBS, CCDS) to see only modules for you."]
     lines += ["", "Always check the latest mappings in NTU's Course Finder before you apply."]
