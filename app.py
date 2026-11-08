@@ -14,6 +14,27 @@ from services.chat_service import (
     understand_message
 )
 
+from services import (
+    flight_service,
+    senior_service,
+    eligibility_service
+)
+
+
+# Which function answers each intent (weather is handled below)
+HANDLERS = {
+    "flight_price": flight_service.answer_flight_price,
+    "cheapest_flight_day": flight_service.answer_cheapest_day,
+    "cheapest_flight_month": flight_service.answer_cheapest_month,
+    "senior_experience": senior_service.answer_experience,
+    "senior_attractions": senior_service.answer_attractions,
+    "senior_accommodation": senior_service.answer_accommodation,
+    "senior_cost": senior_service.answer_cost,
+    "country_comparison": senior_service.answer_comparison,
+    "eligibility": eligibility_service.answer_eligibility,
+    "modules": eligibility_service.answer_modules,
+}
+
 
 app = Flask(__name__)
 
@@ -60,6 +81,13 @@ def chat():
 
     user_message = (
         data["message"]
+    )
+
+
+    # "student" or "staff", from the switch on the chat page
+    user_type = data.get(
+        "user_type",
+        "student"
     )
 
 
@@ -185,6 +213,37 @@ def chat():
 
 
     # =====================================================
+    # FLIGHTS, SENIOR ADVICE, ELIGIBILITY, MODULES
+    # =====================================================
+
+    elif intent in HANDLERS:
+
+        try:
+
+            reply = HANDLERS[intent](
+                result,
+                user_type
+            )
+
+        except Exception as error:
+
+            print(
+                f"Error answering {intent}:",
+                error
+            )
+
+            reply = (
+                "Sorry, something went wrong while I was looking that up. "
+                "Please try asking in a different way."
+            )
+
+
+        return jsonify({
+            "reply": reply
+        })
+
+
+    # =====================================================
     # UNKNOWN REQUEST
     # =====================================================
 
@@ -194,9 +253,11 @@ def chat():
             "reply": (
                 "I'm not sure what you're asking yet.\n\n"
                 "You can ask me things like:\n"
-                "• What's the weather in Tokyo?\n"
-                "• What's Seoul usually like in December?\n"
-                "• Singapore weather in June"
+                "• When should I book my flight to Aalto in January?\n"
+                "• Where did seniors stay near VinUni?\n"
+                "• I'm in NBS with a 3.6 cGPA. Can I go to Aalto?\n"
+                "• Which modules can I take at Tampere?\n"
+                "• How cold is Helsinki in January?"
             )
         })
 
