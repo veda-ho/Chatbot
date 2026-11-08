@@ -14,6 +14,11 @@ const micButton =
     document.getElementById("mic-button");
 
 
+// What the bot remembers from earlier messages
+// (university, city, date, school, cGPA...), sent back each time
+let context = {};
+
+
 // ========================================
 // SEND MESSAGE
 // ========================================
@@ -97,7 +102,8 @@ async function sendMessage() {
 
                 body: JSON.stringify({
                     message: message,
-                    user_type: userType.value
+                    user_type: userType.value,
+                    context: context
                 })
             }
         );
@@ -105,6 +111,12 @@ async function sendMessage() {
 
         const data =
             await response.json();
+
+
+        // Remember details for the next question
+        if (data.context) {
+            context = data.context;
+        }
 
 
         // Remove "Thinking..."
