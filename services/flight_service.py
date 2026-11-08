@@ -42,7 +42,7 @@ def _train():
     df[["route_c", "airline_c"]] = enc.fit_transform(df[["route", "airline"]])
     X = df[FEATURES].astype(float).to_numpy()
     y = df["price_sgd"].to_numpy()
-    kw = dict(max_iter=300, learning_rate=0.06, max_leaf_nodes=31,
+    kw = dict(max_iter=400, learning_rate=0.06, max_leaf_nodes=31,
               categorical_features=[0, 1], random_state=0)
     bundle = {
         "model": HistGradientBoostingRegressor(**kw).fit(X, np.log(y)),
