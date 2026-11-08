@@ -104,6 +104,14 @@ def answer_attractions(result, user_type="student"):
     return "\n".join(lines)
 
 
+def lower_first(text):
+    """'Local student housing provider' -> 'local student housing provider' (keeps names like Airbnb)."""
+    text = str(text)
+    common = {"local", "housing", "university", "private", "student", "direct", "campus", "online"}
+    first = text.split(" ")[0]
+    return text[0].lower() + text[1:] if first.lower() in common else text
+
+
 def answer_accommodation(result, user_type="student"):
     rows, label, note = _seniors_for(result)
     missing = _no_data(rows, label, note)
@@ -113,6 +121,7 @@ def answer_accommodation(result, user_type="student"):
     stays = (
         rows.groupby("accommodation_used")
         .agg(students=("experience_id", "count"),
+             city=("destination_city", "first"),
              type=("accommodation_type", "first"),
              platform=("accommodation_booking_platform", "first"),
              cost=("accommodation_cost_sgd", "median"),
@@ -127,14 +136,20 @@ def answer_accommodation(result, user_type="student"):
     lines = _header("🏠", f"Where seniors stayed near {label}", rows, note)
     for i, s in enumerate(top.itertuples(), 1):
         lines += [
-            f"{i}. {s.accommodation_used} ({s.type})",
-            f"   Rating {s.rating:.1f}/10 · Safety {s.safety:.1f}/10 · "
-            f"{s.students} senior{'s' if s.students > 1 else ''} · about {money(s.cost)} for the stay",
-            f"   Booked via: {s.platform}",
+            f"{i}. {s.accommodation_used}",
+            f"📍 {s.city} · {s.type}",
+            f"⭐ {s.rating:.1f}/10 · 🛡️ Safety {s.safety:.1f}/10 · "
+            f"{s.students} senior{'s' if s.students > 1 else ''}",
+            f"💰 About {money(s.cost)} for the stay · booked via {lower_first(s.platform)}",
+            "",
         ]
-    lines += ["", "Book through the university or a verified platform, and check safety ratings. [Policy POL010]"]
+    # different campuses in different cities (e.g. Aalto in Espoo and Mikkeli)
+    if top["city"].nunique() > 1:
+        lines.append("Note: these are in different cities. Pick the one near your campus.")
+        lines.append("")
+    lines += ["Book through the university or a verified platform, and check safety ratings. [Policy POL010]"]
     if user_type == "staff":
-        lines.append("🏛️ Staff on funded trips: these are student options. Book hotels through an "
+        lines.append("🏛️ These are where past students stayed. For your claim, book your hotel through an "
                      "NTU-approved agent (CWT Singapore, BCD Travel or Flight Centre). [Policy POL012]")
     return "\n".join(lines)
 
@@ -146,7 +161,7 @@ def answer_cost(result, user_type="student"):
         return missing
 
     m = rows.median(numeric_only=True)
-    lines = _header("💰", f"What exchange in {label} cost seniors", rows, note)
+    lines = _header("💰", f"Cost of exchange at {label}", rows, note)
     lines += [
         f"Total for the exchange: about {money(m['total_estimated_spending_sgd'])} "
         f"(median, {m['exchange_months']:.0f}-month stay)",
