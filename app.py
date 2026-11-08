@@ -19,7 +19,8 @@ from services.chat_service import (
 from services import (
     flight_service,
     senior_service,
-    eligibility_service
+    eligibility_service,
+    staff_service
 )
 
 from services.data_loader import (
@@ -46,6 +47,15 @@ HANDLERS = {
 }
 
 
+# Staff get answers from past NTU staff trips and claim limits instead
+STAFF_HANDLERS = {
+    "senior_accommodation": staff_service.answer_stay,
+    "senior_experience": staff_service.answer_experience,
+    "senior_cost": staff_service.answer_cost,
+    "senior_attractions": staff_service.answer_attractions,
+}
+
+
 MONTH_NAMES = {
     1: "January", 2: "February", 3: "March", 4: "April",
     5: "May", 6: "June", 7: "July", 8: "August",
@@ -65,7 +75,7 @@ PLACE_KEYS = [
 ]
 
 MEMORY_KEYS = PLACE_KEYS + [
-    "month", "departure_date", "school", "cgpa", "semester"
+    "month", "departure_date", "school", "cgpa", "semester", "nights"
 ]
 
 
@@ -371,6 +381,10 @@ def chat():
         result.get("intent") == "unknown"
         and gave_detail
         and old_context.get("last_intent")
+        and (
+            not named_place                      # e.g. "12 jan", "NBS, 3.4"
+            or old_context.get("asked_question") # e.g. "Aalto" after "Which university?"
+        )
     ):
 
         result["intent"] = old_context["last_intent"]
@@ -425,6 +439,10 @@ def chat():
     if answered:
 
         context["last_intent"] = answered[-1]
+
+        # Did the bot ask the user for a missing detail?
+        # (short replies with a "?" are follow-up questions, full answers are long)
+        context["asked_question"] = len(reply) < 300 and "?" in reply
 
     elif old_context.get("last_intent"):
 
@@ -566,6 +584,14 @@ def answer(result, user_type):
     # FLIGHTS, SENIOR ADVICE, ELIGIBILITY, MODULES
     # =====================================================
 
+    elif user_type == "staff" and intent in STAFF_HANDLERS:
+
+        return STAFF_HANDLERS[intent](
+            result,
+            user_type
+        )
+
+
     elif intent in HANDLERS:
 
         return HANDLERS[intent](
@@ -604,6 +630,19 @@ def answer(result, user_type):
 
             if result.get("school"):
                 details.append(str(result["school"]).upper())
+
+
+            if user_type == "staff":
+
+                return (
+                    f"Got it: {', '.join(details)}. 👍 I can help with:\n\n"
+                    "• Which flight can I claim?\n"
+                    "• Where can I stay within NTU's hotel limit?\n"
+                    "• How much will the trip cost, and what can I claim?\n"
+                    "• Is it safe? Any tips from NTU staff?\n"
+                    "• What's the weather like?\n\n"
+                    "What would you like to know?"
+                )
 
 
             # only ask for what we don't know yet
