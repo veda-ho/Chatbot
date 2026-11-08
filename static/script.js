@@ -137,12 +137,23 @@ async function sendMessage() {
         addBotMessage("Thinking...");
 
 
+    // Stop waiting after 45 seconds so "Thinking..." never hangs forever
+    const controller = new AbortController();
+
+    const timer = setTimeout(
+        () => controller.abort(),
+        45000
+    );
+
+
     try {
 
         const response = await fetch(
             "/chat",
             {
                 method: "POST",
+
+                signal: controller.signal,
 
                 headers: {
                     "Content-Type":
@@ -161,6 +172,8 @@ async function sendMessage() {
 
         const data =
             await response.json();
+
+        clearTimeout(timer);
 
 
         loadingMessage.remove();
@@ -184,6 +197,8 @@ async function sendMessage() {
 
     catch (error) {
 
+        clearTimeout(timer);
+
         console.error(
             "Chat error:",
             error
@@ -191,9 +206,21 @@ async function sendMessage() {
 
         loadingMessage.remove();
 
-        addBotMessage(
-            "Sorry, something went wrong."
-        );
+        if (error.name === "AbortError") {
+
+            addBotMessage(
+                "⏳ That took too long. Please send your question again."
+            );
+
+        }
+
+        else {
+
+            addBotMessage(
+                "Sorry, something went wrong. Check the terminal for the error."
+            );
+
+        }
 
     }
 }
