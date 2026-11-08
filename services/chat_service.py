@@ -1,6 +1,7 @@
 import os
 import json
 from datetime import date
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as GeminiTimeout
 
 from dotenv import load_dotenv
 from google import genai
@@ -15,6 +16,27 @@ load_dotenv()
 
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
+)
+
+
+# Gemini models to try, in order. If one is busy (503), over its limit (429)
+# or doesn't exist, the next one is tried. Flash-Lite goes first because its
+# free daily limit is much higher, and sorting questions is a simple job.
+# To change them without editing code, set GEMINI_MODELS, e.g.
+#   GEMINI_MODELS=gemini-3.5-flash-lite,gemini-3.6-flash
+GEMINI_MODELS = [
+    m.strip() for m in os.getenv(
+        "GEMINI_MODELS",
+        "gemini-3.5-flash-lite,gemini-3.6-flash"
+    ).split(",")
+    if m.strip()
+]
+
+# Give up on each model after this many seconds, so the chat never freezes
+GEMINI_TIMEOUT = 15
+
+gemini_pool = ThreadPoolExecutor(
+    max_workers=4
 )
 
 
@@ -190,10 +212,52 @@ LATEST USER MESSAGE:
         # Send request to Gemini
         # -------------------------------------------------
 
-        interaction = client.interactions.create(
-            model="gemini-3.6-flash",
-            input=prompt
-        )
+        interaction = None
+
+        last_error = None
+
+
+        for model_name in GEMINI_MODELS:
+
+            try:
+
+                waiting = gemini_pool.submit(
+                    client.interactions.create,
+                    model=model_name,
+                    input=prompt
+                )
+
+                interaction = waiting.result(
+                    timeout=GEMINI_TIMEOUT
+                )
+
+                break
+
+            except GeminiTimeout:
+
+                print(
+                    f"Gemini error ({model_name}): no reply after {GEMINI_TIMEOUT} seconds"
+                )
+
+                last_error = "timeout"
+
+            except Exception as error:
+
+                print(
+                    f"Gemini error ({model_name}):",
+                    error
+                )
+
+                last_error = str(error)
+
+
+        # every model failed
+        if interaction is None:
+
+            return {
+                "intent": "unknown",
+                "error": last_error
+            }
 
 
         response_text = (
