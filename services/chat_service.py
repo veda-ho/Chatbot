@@ -22,7 +22,26 @@ client = genai.Client(
 # UNDERSTAND USER MESSAGE
 # =========================================================
 
-def understand_message(message):
+def format_history(history, last=10):
+    """The last few messages as plain text for Gemini (long replies shortened)."""
+
+    lines = []
+
+    for turn in (history or [])[-last * 2:]:
+
+        who = "User" if turn.get("role") == "user" else "Bot"
+
+        text = " ".join(str(turn.get("text", "")).split())
+
+        if len(text) > 300:
+            text = text[:300] + "..."
+
+        lines.append(f"{who}: {text}")
+
+    return "\n".join(lines) if lines else "(this is the first message)"
+
+
+def understand_message(message, history=None):
 
     try:
 
@@ -124,6 +143,23 @@ IMPORTANT RULES:
 - Use the intent names exactly as provided above.
 
 
+CONVERSATION SO FAR (oldest first):
+
+{format_history(history)}
+
+
+Use the conversation to understand the latest message:
+
+- The intent describes ONLY the latest user message.
+- If the latest message refers back ("there", "that uni", "the same
+  date", "go back to Aalto", "the first place I asked about"),
+  fill in those details from the conversation.
+- If the bot just asked the user for a missing detail (a date, cGPA,
+  school, university) and the latest message only gives that detail,
+  use the intent of the question the bot was answering.
+- If the latest message names a new place, use the new place.
+
+
 Return exactly this structure:
 
 {{
@@ -144,7 +180,7 @@ Return exactly this structure:
 }}
 
 
-USER MESSAGE:
+LATEST USER MESSAGE:
 
 {message}
 """
