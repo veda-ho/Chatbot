@@ -140,6 +140,16 @@ def _pick_departure(result, place, today):
         except ValueError:
             pass
 
+    # "Semester 1" or "Semester 2" with no date: the next start of that semester
+    semester = str(result.get("semester") or "")
+    if semester in ("1", "2") and not result.get("month") and place["uni"] is not None:
+        starts = [term_start(place["uni"], int(semester), y) for y in (today.year, today.year + 1)]
+        starts = [s for s in starts if s and s > today]
+        if starts:
+            dep = starts[0] - timedelta(days=7)
+            return dep, (f"I used Semester {semester} at {place['uni']['name']} (starting around "
+                         f"{starts[0]:%d %b %Y}) and a flight on {dep:%d %b %Y}.")
+
     month = result.get("month")
     if month:
         month = int(month)
@@ -267,11 +277,12 @@ def answer_flight_price(result, user_type="student"):
     budget = r["cheapest_budget"]
     if r["user_type"] == "staff":
         lines.append("")
-        lines.append("🏛️ NTU-funded trip: full-service airlines only, booked through an approved agent "
-                     "(CWT Singapore, BCD Travel or Flight Centre). [Policy POL011, POL012]")
+        lines.append("🏛️ Showing only flights you can claim as NTU staff: full-service airlines, "
+                     "booked through an approved agent (CWT Singapore, BCD Travel or Flight Centre). "
+                     "[Policy POL011, POL012]")
         if budget:
             lines.append(f"Budget fares from about {money(budget['fare'])} ({budget['airline']}) "
-                         f"exist but can't be claimed.")
+                         f"are hidden because NTU won't reimburse them.")
     elif p["budget"]:
         lines.append("")
         lines.append("ℹ️ This is a budget airline. NTU allows these for regional flights under 4 hours, "
@@ -284,9 +295,17 @@ def answer_flight_price(result, user_type="student"):
                 start = term_start(r["place"]["uni"], s, year)
                 if start and 0 <= (start - dep).days <= 30:
                     sem = s
-    context = _senior_flight_context(r["route"], sem)
-    if context:
-        lines += ["", context]
+    if r["user_type"] == "staff":
+        # staff: past staff trips and NTU claim limits, not student booking habits
+        from services import staff_service
+        city = r["place"]["city"] or ROUTE_CITY[r["route"]]
+        extra = staff_service.flight_context(r["route"], city, r["place"]["country"])
+        if extra:
+            lines += [""] + extra
+    else:
+        context = _senior_flight_context(r["route"], sem)
+        if context:
+            lines += ["", context]
 
     lines += ["", "Fares are estimates from our model on synthetic data."]
     return "\n".join(lines)

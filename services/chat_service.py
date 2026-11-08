@@ -98,11 +98,12 @@ Choose the intent (or intents) from this list:
      exchange students recommend.
 
 5. senior_accommodation
-   - User asks where to stay, or about accommodation used or
-     recommended by previous exchange students.
+   - User asks where to stay, which hotel to book, or about
+     accommodation used or recommended by previous travellers.
 
 6. senior_cost
-   - User asks about spending, living costs, budgets or expenses.
+   - User asks about spending, living costs, budgets or expenses,
+     how much a trip will cost, or how much they can claim.
 
 7. flight_price
    - User asks about flight prices, which flight to book,
@@ -149,6 +150,7 @@ Extract information when available:
 - cgpa: a number, e.g. 3.6
 - school: the user's NTU school, e.g. "NBS", "CCDS", "EEE"
 - semester: 1 or 2, if the user names a semester
+- nights: number of nights of the trip, e.g. 4 (a 5-day trip is 4 nights)
 
 For flight-related intents, put the place the user flies to in
 "destination", not "city". If the user names a university,
@@ -198,7 +200,8 @@ Return exactly this structure:
     "airline": null,
     "cgpa": null,
     "school": null,
-    "semester": null
+    "semester": null,
+    "nights": null
 }}
 
 

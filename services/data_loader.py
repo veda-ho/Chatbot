@@ -17,6 +17,8 @@ SENIORS = pd.read_csv(DATA / "seniors.csv")
 ELIGIBILITY = pd.read_csv(DATA / "eligibility.csv")
 MODULES = pd.read_csv(DATA / "modules.csv")
 POLICIES = pd.read_csv(DATA / "ntu_travel_policies.csv")
+STAFF_TRIPS = pd.read_csv(DATA / "staff_trips.csv")
+CLAIM_LIMITS = pd.read_csv(DATA / "staff_claim_limits.csv")
 
 
 # =========================================================
@@ -42,6 +44,9 @@ CITIES = {
     "jogja": ("Yogyakarta", "Indonesia", "SIN-YIA"),
     "jakarta": ("Jakarta", "Indonesia", "SIN-CGK"),
     "depok": ("Jakarta", "Indonesia", "SIN-CGK"),
+    "bandung": ("Bandung", "Indonesia", "SIN-CGK"),
+    "luxembourgcity": ("Luxembourg City", "Luxembourg", "SIN-LUX"),
+    "kirchberg": ("Luxembourg City", "Luxembourg", "SIN-LUX"),
 }
 
 # country -> main flight route
@@ -187,3 +192,18 @@ def policies_for(user_type):
     if user_type == "staff":
         return POLICIES[who.str.contains("staff")]
     return POLICIES[~who.str.contains("staff")]
+
+
+def claim_limits_for(city=None, country=None):
+    """NTU's hotel limit and daily allowance for a city (or the country's first city)."""
+    rows = CLAIM_LIMITS[CLAIM_LIMITS["city"] == city]
+    if rows.empty and country:
+        rows = CLAIM_LIMITS[CLAIM_LIMITS["country"] == country]
+    return rows.iloc[0] if len(rows) else None
+
+
+def claim_line(limit):
+    if limit is None:
+        return None
+    return (f"🏛️ NTU limits in {limit['city']}: hotel up to {money(limit['hotel_cap_sgd_per_night'])} a night, "
+            f"daily allowance {money(limit['daily_allowance_sgd'])}. [Policy POL013, POL014]")
