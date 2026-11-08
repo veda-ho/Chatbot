@@ -238,3 +238,32 @@ body {
 #send-button:hover {
     background: #163a69;
 }
+
+
+/* =========================================
+   STUDENT / STAFF SWITCH
+   ========================================= */
+
+.user-type {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.user-type select {
+    margin-left: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+}
+
+
+/* =========================================
+   MIC BUTTON WHILE LISTENING
+   ========================================= */
+
+#mic-button.listening {
+    background-color: #e5484d;
+    color: #ffffff;
+}

@@ -7,6 +7,12 @@ const userInput =
 const chatBox =
     document.getElementById("chat-box");
 
+const userType =
+    document.getElementById("user-type");
+
+const micButton =
+    document.getElementById("mic-button");
+
 
 // ========================================
 // SEND MESSAGE
@@ -90,7 +96,8 @@ async function sendMessage() {
                 },
 
                 body: JSON.stringify({
-                    message: message
+                    message: message,
+                    user_type: userType.value
                 })
             }
         );
@@ -183,3 +190,87 @@ userInput.addEventListener(
 
     }
 );
+
+
+// ========================================
+// MIC BUTTON (SPEECH TO TEXT)
+// Uses the browser's built-in speech recognition (Chrome / Edge)
+// ========================================
+
+const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+
+if (SpeechRecognition) {
+
+    const recognition =
+        new SpeechRecognition();
+
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+
+    micButton.addEventListener(
+        "click",
+        function() {
+
+            micButton.classList.add("listening");
+            recognition.start();
+
+        }
+    );
+
+
+    // Put what the user said into the box, then send it
+    recognition.addEventListener(
+        "result",
+        function(event) {
+
+            userInput.value =
+                event.results[0][0].transcript;
+
+            sendMessage();
+
+        }
+    );
+
+
+    recognition.addEventListener(
+        "end",
+        function() {
+
+            micButton.classList.remove("listening");
+
+        }
+    );
+
+
+    recognition.addEventListener(
+        "error",
+        function(event) {
+
+            console.error("Speech error:", event.error);
+            micButton.classList.remove("listening");
+
+        }
+    );
+
+}
+
+else {
+
+    micButton.title =
+        "Voice input works in Chrome or Edge";
+
+    micButton.addEventListener(
+        "click",
+        function() {
+
+            addBotMessage(
+                "Voice input isn't supported in this browser. Try Chrome or Edge."
+            );
+
+        }
+    );
+
+}
