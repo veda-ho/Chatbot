@@ -20,6 +20,14 @@ from services import (
     eligibility_service
 )
 
+from services.data_loader import (
+    resolve,
+    ROUTE_CITY
+)
+
+
+app = Flask(__name__)
+
 
 # Which function answers each intent (weather is handled below)
 HANDLERS = {
@@ -36,7 +44,106 @@ HANDLERS = {
 }
 
 
-app = Flask(__name__)
+MONTH_NAMES = {
+    1: "January", 2: "February", 3: "March", 4: "April",
+    5: "May", 6: "June", 7: "July", 8: "August",
+    9: "September", 10: "October", 11: "November", 12: "December"
+}
+
+
+# =========================================================
+# CONVERSATION MEMORY
+# The browser sends back what we remembered last time, so a
+# follow-up like "Which modules can I take?" still knows the
+# university from an earlier message.
+# =========================================================
+
+PLACE_KEYS = [
+    "university", "destination", "city", "country", "countries"
+]
+
+MEMORY_KEYS = PLACE_KEYS + [
+    "month", "departure_date", "school", "cgpa", "semester"
+]
+
+
+def remember(result, context):
+
+    context = context or {}
+
+    # The user named a new place: forget the old one
+    if any(result.get(k) for k in PLACE_KEYS):
+
+        context = {
+            k: v for k, v in context.items()
+            if k not in PLACE_KEYS
+        }
+
+
+    # New details win; missing ones come from memory
+    merged = dict(result)
+
+    for key in MEMORY_KEYS:
+
+        if merged.get(key) in (None, "", []):
+
+            if context.get(key) not in (None, "", []):
+
+                merged[key] = context[key]
+
+
+    # Tidy the month so the weather code always gets a number
+    try:
+
+        if merged.get("month") is not None:
+
+            month = str(merged["month"]).strip().lower()
+
+            # accept "1", 1, "January" or "jan"
+            merged["month"] = next(
+                (n for n, name in MONTH_NAMES.items()
+                 if name.lower().startswith(month[:3])),
+                None
+            ) if not month.isdigit() else int(month)
+
+            merged["month_name"] = MONTH_NAMES[merged["month"]]
+
+    except (ValueError, KeyError):
+
+        merged["month"] = None
+
+
+    new_context = {
+        k: merged[k] for k in MEMORY_KEYS
+        if merged.get(k) not in (None, "", [])
+    }
+
+    return merged, new_context
+
+
+def weather_city(result):
+    """The city to look up weather for, even if the user named a university."""
+
+    if result.get("city"):
+
+        return result["city"]
+
+
+    place = resolve(
+        result.get("destination"),
+        result.get("university"),
+        result.get("country")
+    )
+
+    if place:
+
+        return place["city"] or ROUTE_CITY[place["route"]]
+
+
+    return (
+        result.get("destination")
+        or result.get("country")
+    )
 
 
 # =========================================================
@@ -100,6 +207,61 @@ def chat():
     )
 
 
+    result, context = remember(
+        result,
+        data.get("context")
+    )
+
+
+    # -----------------------------------
+    # Answer every question in the message
+    # e.g. "Where should I stay and how much does it cost?"
+    # -----------------------------------
+
+    intents = (
+        result.get("intents")
+        or [result.get("intent", "unknown")]
+    )
+
+    replies = []
+
+    for intent in intents:
+
+        try:
+
+            replies.append(
+                answer(
+                    dict(result, intent=intent),
+                    user_type
+                )
+            )
+
+        except Exception as error:
+
+            print(
+                f"Error answering {intent}:",
+                error
+            )
+
+            replies.append(
+                "Sorry, something went wrong while I was looking that up. "
+                "Please try asking in a different way."
+            )
+
+
+    reply = "\n\n━━━━━━━━━━━━━━━━\n\n".join(
+        replies
+    )
+
+
+    return jsonify({
+        "reply": reply,
+        "context": context
+    })
+
+
+def answer(result, user_type):
+
     intent = result["intent"]
 
 
@@ -109,7 +271,12 @@ def chat():
 
     if intent == "current_weather":
 
-        city = result["city"]
+        city = weather_city(result)
+
+
+        if not city:
+
+            return "Which city do you want the weather for?"
 
 
         weather = get_weather(
@@ -119,14 +286,13 @@ def chat():
 
         if weather is None:
 
-            return jsonify({
-                "reply":
-                    f"Sorry, I couldn't find weather information for {city}. "
-                    f"Please check the location and try again."
-            })
+            return (
+                f"Sorry, I couldn't find weather information for {city}. "
+                f"Please check the location and try again."
+            )
 
 
-        reply = (
+        return (
             f"🌤️ Current Weather in "
             f"{weather['city']}, "
             f"{weather['country']}\n\n"
@@ -145,20 +311,26 @@ def chat():
         )
 
 
-        return jsonify({
-            "reply": reply
-        })
-
-
     # =====================================================
     # HISTORICAL WEATHER
     # =====================================================
 
     elif intent == "historical_weather":
 
-        city = result["city"]
+        city = weather_city(result)
 
-        month = result["month"]
+        month = result.get("month")
+
+
+        if not city:
+
+            return "Which city do you want typical weather for?"
+
+
+        if not month:
+
+            return f"Which month do you want typical weather for in {city}?"
+
 
         month_name = (
             result["month_name"]
@@ -175,14 +347,13 @@ def chat():
 
         if historical is None:
 
-            return jsonify({
-                "reply":
-                    f"Sorry, I couldn't find historical weather information "
-                    f"for {city}. Please check the location and try again."
-            })
+            return (
+                f"Sorry, I couldn't find historical weather information "
+                f"for {city}. Please check the location and try again."
+            )
 
 
-        reply = (
+        return (
             f"📊 Typical Weather in "
             f"{historical['city']} — "
             f"{month_name}\n\n"
@@ -207,40 +378,16 @@ def chat():
         )
 
 
-        return jsonify({
-            "reply": reply
-        })
-
-
     # =====================================================
     # FLIGHTS, SENIOR ADVICE, ELIGIBILITY, MODULES
     # =====================================================
 
     elif intent in HANDLERS:
 
-        try:
-
-            reply = HANDLERS[intent](
-                result,
-                user_type
-            )
-
-        except Exception as error:
-
-            print(
-                f"Error answering {intent}:",
-                error
-            )
-
-            reply = (
-                "Sorry, something went wrong while I was looking that up. "
-                "Please try asking in a different way."
-            )
-
-
-        return jsonify({
-            "reply": reply
-        })
+        return HANDLERS[intent](
+            result,
+            user_type
+        )
 
 
     # =====================================================
@@ -249,17 +396,47 @@ def chat():
 
     else:
 
-        return jsonify({
-            "reply": (
-                "I'm not sure what you're asking yet.\n\n"
-                "You can ask me things like:\n"
-                "• When should I book my flight to Aalto in January?\n"
-                "• Where did seniors stay near VinUni?\n"
-                "• I'm in NBS with a 3.6 cGPA. Can I go to Aalto?\n"
-                "• Which modules can I take at Tampere?\n"
-                "• How cold is Helsinki in January?"
+        # The user named a place but not a question: say what we can do there
+        place = resolve(
+            result.get("university"),
+            result.get("destination"),
+            result.get("city"),
+            result.get("country")
+        )
+
+        if place:
+
+            name = (
+                place["uni"]["name"] if place["uni"] is not None
+                else place["city"] or place["country"]
             )
-        })
+
+            when = (
+                f" in {result['month_name']}"
+                if result.get("month_name") else ""
+            )
+
+            return (
+                f"Got it: {name}{when}. 👍 I can help with:\n\n"
+                "• Am I eligible? (tell me your school and cGPA)\n"
+                "• Which modules can I take?\n"
+                "• When should I book my flight?\n"
+                "• Where did seniors stay? Is it safe?\n"
+                "• What does exchange there cost?\n"
+                "• What's the weather like?\n\n"
+                "What would you like to know?"
+            )
+
+
+        return (
+            "I'm not sure what you're asking yet.\n\n"
+            "You can ask me things like:\n"
+            "• When should I book my flight to Aalto in January?\n"
+            "• Where did seniors stay near VinUni?\n"
+            "• I'm in NBS with a 3.6 cGPA. Can I go to Aalto?\n"
+            "• Which modules can I take at Tampere?\n"
+            "• How cold is Helsinki in January?"
+        )
 
 
 # =========================================================
