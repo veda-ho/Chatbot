@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ExchangeBot | NTU Travel Assistant</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <!-- Home page: choose Student or Staff once, before chatting -->
+    <div class="chat-container">
+
+        <!-- Header -->
+        <div class="chat-header">
+            <h1>✈️ Exchange Flight Assistant</h1>
+            <p>NTU's travel assistant for exchange and work trips</p>
+        </div>
+
+
+        <div class="home-body">
+
+            <h2>Who are you?</h2>
+
+            <p class="home-intro">
+                This decides which NTU travel rules apply to your answers.
+            </p>
+
+
+            <!-- Student -->
+            <a class="role-card" href="{{ url_for('chat_page', role='student') }}">
+
+                <span class="role-icon">🎓</span>
+
+                <span class="role-text">
+                    <strong>Student</strong>
+                    <span>Planning a GEM exchange: eligibility, modules,
+                        flights, housing, costs and weather</span>
+                </span>
+
+            </a>
+
+
+            <!-- Staff / Faculty -->
+            <a class="role-card" href="{{ url_for('chat_page', role='staff') }}">
+
+                <span class="role-icon">🏛️</span>
+
+                <span class="role-text">
+                    <strong>Staff / Faculty</strong>
+                    <span>Planning a research or business trip: claimable
+                        flights, places to stay, safety and weather</span>
+                </span>
+
+            </a>
+
+
+            <p class="home-note">
+                Covers Finland, Hungary, Luxembourg, Croatia,
+                Vietnam, Brunei and Indonesia.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Going home always starts a fresh chat -->
+    <script>
+        try {
+            sessionStorage.removeItem("exchangebot-chat");
+        } catch (error) {
+            // storage blocked: nothing to clear
+        }
+    </script>
+
+</body>
+
+</html>

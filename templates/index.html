@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Exchange Flight Assistant</title>
+    <title>ExchangeBot | NTU Travel Assistant</title>
 
     <link
         rel="stylesheet"
@@ -13,36 +13,56 @@
     >
 </head>
 
-<body>
+<!-- data-role tells script.js whether this chat is for a student or staff -->
+<body data-role="{{ role }}">
 
     <!-- Main chatbot container -->
     <div class="chat-container">
 
         <!-- Header -->
         <div class="chat-header">
-            <h1>✈️ Exchange Flight Assistant</h1>
-            <p>Plan smarter for your exchange</p>
 
-            <!-- Student or staff: changes which NTU travel rules apply -->
-            <label class="user-type">
-                I am:
-                <select id="user-type">
-                    <option value="student">Student</option>
-                    <option value="staff">Staff / Faculty</option>
-                </select>
-            </label>
+            <div class="header-row">
+
+                <h1>✈️ Exchange Flight Assistant</h1>
+
+                <!-- Back to the home page: starts a new chat -->
+                <a
+                    class="home-button"
+                    href="{{ url_for('home') }}"
+                    title="Back to home (starts a new chat)"
+                >
+                    🏠 Home
+                </a>
+
+            </div>
+
+            {% if role == "staff" %}
+                <p>🏛️ Staff / Faculty · showing options NTU will reimburse</p>
+            {% else %}
+                <p>🎓 Student · plan smarter for your exchange</p>
+            {% endif %}
+
         </div>
 
 
         <!-- Chat messages -->
         <div class="chat-box" id="chat-box">
 
-            <div class="message bot-message">
-                Hi! 👋 I'm your Exchange Flight Assistant.
-                Ask me when to book flights, where seniors stayed,
-                what exchange costs, which modules you can take,
-                whether you're eligible, or what the weather is like.
-            </div>
+            <!-- Keep each line of the greeting on one line: line breaks here show in the chat -->
+            {% if role == "staff" %}
+            <div class="message bot-message" id="greeting">Hi! 👋 I'm your NTU travel assistant.
+
+I'll only show flights and bookings you can claim under NTU's staff travel policy.
+
+Try: "I need a flight to Hanoi for a research trip on 12 January"</div>
+            {% else %}
+            <div class="message bot-message" id="greeting">Hi! 👋 I'm your Exchange Flight Assistant.
+
+I can help with eligibility, modules, flights, housing, costs and weather for our 7 exchange destinations.
+
+Try: "I'm an NBS student going to Aalto in Semester 1"</div>
+            {% endif %}
 
         </div>
 
@@ -53,7 +73,7 @@
             <input
                 type="text"
                 id="user-input"
-                placeholder="Ask about flights, prices or weather..."
+                placeholder="Ask about flights, housing, modules or weather..."
             >
 
             <!-- Voice input -->
