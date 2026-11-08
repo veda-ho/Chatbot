@@ -2,7 +2,9 @@ from flask import (
     Flask,
     render_template,
     jsonify,
-    request
+    request,
+    redirect,
+    url_for
 )
 
 from services.weather_service import (
@@ -147,14 +149,35 @@ def weather_city(result):
 
 
 # =========================================================
-# HOME PAGE
+# HOME PAGE: choose Student or Staff / Faculty
 # =========================================================
 
 @app.route("/")
 def home():
 
     return render_template(
-        "index.html"
+        "home.html"
+    )
+
+
+# =========================================================
+# CHAT PAGE: /student or /staff
+# =========================================================
+
+@app.route("/<role>")
+def chat_page(role):
+
+    # Anything other than student or staff goes back home
+    if role not in ("student", "staff"):
+
+        return redirect(
+            url_for("home")
+        )
+
+
+    return render_template(
+        "index.html",
+        role=role
     )
 
 
@@ -191,26 +214,63 @@ def chat():
     )
 
 
-    # "student" or "staff", from the switch on the chat page
-    user_type = data.get(
-        "user_type",
-        "student"
+    # "student" or "staff", chosen on the home page
+    user_type = (
+        "staff" if data.get("user_type") == "staff"
+        else "student"
     )
+
+
+    # Everything said so far in this sitting
+    history = data.get("history") or []
 
 
     # -----------------------------------
     # Understand user's request
+    # (Gemini also sees the conversation so far)
     # -----------------------------------
 
     result = understand_message(
-        user_message
+        user_message,
+        history
+    )
+
+
+    old_context = data.get("context") or {}
+
+    # Did this message give a new detail (date, cGPA, school, place...)?
+    gave_detail = any(
+        result.get(key) not in (None, "", [])
+        for key in MEMORY_KEYS
+    )
+
+
+    # Did this message itself name a place? (used for the "Got it" reply)
+    named_place = any(
+        result.get(key) not in (None, "", [])
+        for key in PLACE_KEYS
     )
 
 
     result, context = remember(
         result,
-        data.get("context")
+        old_context
     )
+
+    result["named_place"] = named_place
+
+
+    # A reply like "12 jan" or "3.4" on its own has no question in it.
+    # If the bot just asked for that detail, carry on with the last question.
+    if (
+        result.get("intent") == "unknown"
+        and gave_detail
+        and old_context.get("last_intent")
+    ):
+
+        result["intent"] = old_context["last_intent"]
+
+        result["intents"] = [old_context["last_intent"]]
 
 
     # -----------------------------------
@@ -252,6 +312,18 @@ def chat():
     reply = "\n\n━━━━━━━━━━━━━━━━\n\n".join(
         replies
     )
+
+
+    # Remember the last real question for the next message
+    answered = [i for i in intents if i != "unknown"]
+
+    if answered:
+
+        context["last_intent"] = answered[-1]
+
+    elif old_context.get("last_intent"):
+
+        context["last_intent"] = old_context["last_intent"]
 
 
     return jsonify({
@@ -404,7 +476,7 @@ def answer(result, user_type):
             result.get("country")
         )
 
-        if place:
+        if place and result.get("named_place"):
 
             name = (
                 place["uni"]["name"] if place["uni"] is not None
