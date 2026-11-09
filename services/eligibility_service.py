@@ -75,6 +75,7 @@ def answer_eligibility(result, user_type="student"):
     college = to_college(result.get("school"))
 
     lines = [f"🎓 Exchange eligibility: {place_name(place)}", ""]
+    aims = False   # AIMS places are limited to some subjects, so add a note if one is shown
     for _, uni in unis.iterrows():
         rows = ELIGIBILITY[matches(ELIGIBILITY["university_name"], uni["match_key"])]
         spots = f"{uni['ntu_spots_sem1']} spots in Sem 1, {uni['ntu_spots_sem2']} in Sem 2"
@@ -87,6 +88,7 @@ def answer_eligibility(result, user_type="student"):
                 lines.append(f"❌ {uni['name']}: not open to {COLLEGE_NAMES[college]} students.")
                 continue
             # some universities have more than one listing (e.g. Aalto's two business campuses)
+            aims = aims or row["university_name"].str.contains("(AIMS)", regex=False).any()
             for r in row.itertuples():
                 name = uni["name"] if len(row) == 1 else r.university_name
                 need = r.min_cgpa
@@ -99,6 +101,7 @@ def answer_eligibility(result, user_type="student"):
             lines.append(f"   {uni['name']} has {spots}.")
         else:
             need = rows["min_cgpa"]
+            aims = aims or rows["university_name"].str.contains("(AIMS)", regex=False).any()
             open_to = ", ".join(COLLEGE_NAMES[c] for c in rows["student_type"].unique())
             range_text = f"{need.min():.2f}" if need.min() == need.max() else f"{need.min():.2f}–{need.max():.2f}"
             verdict = ""
@@ -106,6 +109,9 @@ def answer_eligibility(result, user_type="student"):
                 verdict = "✅ " if cgpa >= need.min() else "❌ "
             lines.append(f"{verdict}{uni['name']}: minimum cGPA {range_text}, open to {open_to} ({spots}).")
 
+    if aims:
+        lines += ["", "AIMS places are only for some subjects (e.g. Engineering, International Business, "
+                      "Language and Culture). Check the GEM Explorer listing."]
     if not college:
         lines += ["", "Tell me your school (e.g. NBS, CCDS, EEE) for an exact answer."]
     lines += ["", "Spots are from the GEM Explorer AY25/26 vacancy list."]

@@ -17,7 +17,7 @@ from services.data_loader import (
 from services import flight_service, senior_service
 
 
-APPROVED_AGENTS = "CWT Singapore, BCD Travel or Flight Centre"
+BOOKING_PARTNER = "Trip.com, NTU's travel partner"
 
 
 # =========================================================
@@ -106,7 +106,7 @@ def answer_stay(result, user_type="staff"):
         lines += [f"⚠️ Over the limit: {h.hotel_name} is about {money(h.rate)} a night "
                   f"(limit {money(h.cap)}). You'd pay the difference yourself.", ""]
 
-    lines.append(f"Book through an NTU-approved agent ({APPROVED_AGENTS}) so it can be claimed. [Policy POL012]")
+    lines.append(f"Book on {BOOKING_PARTNER}, so it can be claimed. [Policy POL012]")
     return "\n".join(lines)
 
 

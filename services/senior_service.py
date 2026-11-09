@@ -149,8 +149,8 @@ def answer_accommodation(result, user_type="student"):
         lines.append("")
     lines += ["Book through the university or a verified platform, and check safety ratings. [Policy POL010]"]
     if user_type == "staff":
-        lines.append("🏛️ These are where past students stayed. For your claim, book your hotel through an "
-                     "NTU-approved agent (CWT Singapore, BCD Travel or Flight Centre). [Policy POL012]")
+        lines.append("🏛️ These are where past students stayed. For your claim, book your hotel on "
+                     "Trip.com, NTU's travel partner. [Policy POL012]")
     return "\n".join(lines)
 
 

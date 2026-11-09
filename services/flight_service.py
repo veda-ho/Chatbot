@@ -278,7 +278,7 @@ def answer_flight_price(result, user_type="student"):
     if r["user_type"] == "staff":
         lines.append("")
         lines.append("🏛️ Showing only flights you can claim as NTU staff: full-service airlines, "
-                     "booked through an approved agent (CWT Singapore, BCD Travel or Flight Centre). "
+                     "booked on Trip.com, NTU's travel partner. "
                      "[Policy POL011, POL012]")
         if budget:
             lines.append(f"Budget fares from about {money(budget['fare'])} ({budget['airline']}) "
@@ -308,6 +308,8 @@ def answer_flight_price(result, user_type="student"):
             lines += ["", context]
 
     lines += ["", "Fares are estimates from our model on synthetic data."]
+    if r["route"] not in set(SENIORS["route"]):
+        lines.append("No NTU students in our data flew this route, so this fare is less certain.")
     return "\n".join(lines)
 
 

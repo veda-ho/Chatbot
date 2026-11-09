@@ -126,7 +126,15 @@ Choose the intent (or intents) from this list:
     - User asks which modules or courses they can take or map
       at a partner university.
 
-13. unknown
+13. human_help
+    - User wants to talk to a real person or NTU staff, or needs
+      something only NTU can decide or do: an appeal, a rejected
+      application, a special case (e.g. a medical condition),
+      a complaint, or an emergency abroad (lost passport, robbed,
+      hurt, in hospital, missed flight).
+    - Example: "Can I speak to someone?", "I lost my passport in Hanoi"
+
+14. unknown
     - The request does not match any of the above.
 
 
@@ -151,6 +159,8 @@ Extract information when available:
 - school: the user's NTU school, e.g. "NBS", "CCDS", "EEE"
 - semester: 1 or 2, if the user names a semester
 - nights: number of nights of the trip, e.g. 4 (a 5-day trip is 4 nights)
+- urgent: true if the user is in danger, hurt, robbed, lost their
+  passport or is stuck abroad right now, otherwise false
 
 For flight-related intents, put the place the user flies to in
 "destination", not "city". If the user names a university,
@@ -201,7 +211,8 @@ Return exactly this structure:
     "cgpa": null,
     "school": null,
     "semester": null,
-    "nights": null
+    "nights": null,
+    "urgent": false
 }}
 
 
@@ -308,6 +319,7 @@ LATEST USER MESSAGE:
             "country_comparison",
             "eligibility",
             "modules",
+            "human_help",
             "unknown"
         ]
 
