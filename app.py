@@ -20,7 +20,9 @@ from services import (
     flight_service,
     senior_service,
     eligibility_service,
-    staff_service
+    staff_service,
+    handoff_service,
+    tripcom_service
 )
 
 from services.data_loader import (
@@ -345,12 +347,22 @@ def chat():
     old_context = data.get("context") or {}
 
 
-    # Gemini didn't answer: say why instead of guessing
+    # Gemini didn't answer: say why instead of guessing,
+    # and offer a person in case it's urgent
     if result.get("error"):
 
         return jsonify({
-            "reply": gemini_problem(result["error"]),
-            "context": old_context
+            "reply": (
+                gemini_problem(result["error"])
+                + "\n\n"
+                + handoff_service.error_line(user_type)
+            ),
+            "context": old_context,
+            "buttons": [
+                handoff_service.button(
+                    user_type, user_message, history, old_context
+                )
+            ]
         })
 
     # Did this message give a new detail (date, cGPA, school, place...)?
@@ -404,6 +416,9 @@ def chat():
 
     replies = []
 
+    # "Search on Trip.com" buttons shown under the answer
+    buttons = []
+
     for intent in intents:
 
         try:
@@ -414,6 +429,12 @@ def chat():
                     user_type
                 )
             )
+
+            for button in tripcom_service.buttons_for(
+                intent, dict(result, intent=intent), user_type
+            ):
+                if button not in buttons:
+                    buttons.append(button)
 
         except Exception as error:
 
@@ -433,8 +454,33 @@ def chat():
     )
 
 
+    # -----------------------------------
+    # Pass to a real person when the bot can't help:
+    # the user asked for one, we have no data, or the bot
+    # didn't understand two messages in a row
+    # -----------------------------------
+
+    stuck = intents == ["unknown"] and not named_place
+
+    misses = (old_context.get("misses", 0) + 1) if stuck else 0
+
+    if "human_help" in intents:
+
+        buttons.append(handoff_service.button(
+            user_type, user_message, history, context
+        ))
+
+    elif handoff_service.has_no_data(reply) or misses >= 2:
+
+        reply += "\n\n" + handoff_service.offer_line(user_type)
+
+        buttons.append(handoff_service.button(
+            user_type, user_message, history, context
+        ))
+
+
     # Remember the last real question for the next message
-    answered = [i for i in intents if i != "unknown"]
+    answered = [i for i in intents if i not in ("unknown", "human_help")]
 
     if answered:
 
@@ -449,10 +495,39 @@ def chat():
         context["last_intent"] = old_context["last_intent"]
 
 
+    context["misses"] = misses
+
+
     return jsonify({
         "reply": reply,
-        "context": context
+        "context": context,
+        "buttons": buttons
     })
+
+
+# =========================================================
+# TRIP.COM CLICKS
+# The "on Trip.com" buttons come here first, so the logs
+# show how many people the bot sends to Trip.com
+# =========================================================
+
+@app.route("/go")
+def go_to_tripcom():
+
+    url = request.args.get("to", "")
+
+    kind = request.args.get("kind", "link")
+
+
+    # only ever send people on to Trip.com
+    if not tripcom_service.is_tripcom(url):
+
+        return redirect(url_for("home"))
+
+
+    print(f"TRIPCOM CLICK ({kind}): {url}")
+
+    return redirect(url)
 
 
 def answer(result, user_type):
@@ -601,6 +676,18 @@ def answer(result, user_type):
 
 
     # =====================================================
+    # TALK TO A PERSON
+    # =====================================================
+
+    elif intent == "human_help":
+
+        return handoff_service.reply(
+            result,
+            user_type
+        )
+
+
+    # =====================================================
     # UNKNOWN REQUEST
     # =====================================================
 
@@ -673,7 +760,8 @@ def answer(result, user_type):
             "• Where did seniors stay near VinUni?\n"
             "• I'm in NBS with a 3.6 cGPA. Can I go to Aalto?\n"
             "• Which modules can I take at Tampere?\n"
-            "• How cold is Helsinki in January?"
+            "• How cold is Helsinki in January?\n"
+            "• Can I talk to a person?"
         )
 
 
