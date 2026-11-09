@@ -136,6 +136,14 @@ Choose the intent (or intents) from this list:
 
 14. unknown
     - The request does not match any of the above.
+    - ALSO use unknown when the message only shares plans or details
+      and asks no question, e.g. "I'm going on exchange to Aalto in
+      January", "I'm in NBS with a 3.4 cGPA", "Staff trip to Hanoi
+      next month". Still fill in every detail you can (university,
+      month, school, cgpa...). The app remembers them and asks
+      what the user wants to know.
+    - Only pick an intent when the user actually asks for it: do not
+      choose weather just because a month is mentioned.
 
 
 If the message asks more than one thing (e.g. "Where should I stay
