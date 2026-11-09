@@ -73,7 +73,7 @@ function loadSession() {
 // SHOW MESSAGES
 // ========================================
 
-function addMessage(text, who) {
+function addMessage(text, who, buttons) {
 
     const bubble =
         document.createElement("div");
@@ -85,6 +85,38 @@ function addMessage(text, who) {
 
     bubble.textContent = text;
 
+
+    // Buttons under the answer:
+    //   "Search on Trip.com" (opens Trip.com with the search filled in)
+    //   "Email the GEM Explorer team" (opens an email with the question filled in)
+    if (buttons && buttons.length) {
+
+        const row =
+            document.createElement("div");
+
+        row.classList.add("button-row");
+
+        for (const button of buttons) {
+
+            const link =
+                document.createElement("a");
+
+            link.classList.add(
+                "chat-button",
+                button.href.startsWith("mailto:") ? "handoff-button" : "trip-button"
+            );
+
+            link.href = button.href;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.textContent = button.label;
+
+            row.appendChild(link);
+        }
+
+        bubble.appendChild(row);
+    }
+
     chatBox.appendChild(bubble);
 
     chatBox.scrollTop =
@@ -94,9 +126,9 @@ function addMessage(text, who) {
 }
 
 
-function addBotMessage(text) {
+function addBotMessage(text, buttons) {
 
-    return addMessage(text, "bot");
+    return addMessage(text, "bot", buttons);
 }
 
 
@@ -106,7 +138,7 @@ function restoreChat() {
     loadSession();
 
     for (const turn of session.history) {
-        addMessage(turn.text, turn.role);
+        addMessage(turn.text, turn.role, turn.buttons);
     }
 }
 
@@ -178,13 +210,13 @@ async function sendMessage() {
 
         loadingMessage.remove();
 
-        addBotMessage(data.reply);
+        addBotMessage(data.reply, data.buttons);
 
 
         // Remember this exchange for the rest of the sitting
         session.history.push(
             { role: "user", text: message },
-            { role: "bot", text: data.reply }
+            { role: "bot", text: data.reply, buttons: data.buttons }
         );
 
         if (data.context) {

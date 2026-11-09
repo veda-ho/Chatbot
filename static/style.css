@@ -122,6 +122,48 @@ body {
 }
 
 
+/* Buttons inside a bot message ("on Trip.com", "Email the GEM Explorer team") */
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-top: 10px;
+
+    white-space: normal;
+}
+
+.chat-button {
+    display: inline-block;
+
+    padding: 8px 14px;
+
+    border-radius: 18px;
+
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.trip-button {
+    background: #287dfa;     /* Trip.com blue */
+    color: white;
+}
+
+.trip-button:hover {
+    background: #1a64d1;
+}
+
+.handoff-button {
+    background: #1f4e8c;
+    color: white;
+}
+
+.handoff-button:hover {
+    background: #163a69;
+}
+
+
 /* ========================================
    USER MESSAGE
    ======================================== */
